@@ -103,6 +103,8 @@ export interface BillItem {
   cashTendered?: number;
   changeAmount?: number;
   paidAtTime?: string;
+  isAllServed?: boolean;
+  unservedCount?: number;
 }
 
 export interface TransactionRecord {

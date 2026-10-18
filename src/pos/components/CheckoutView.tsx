@@ -104,6 +104,11 @@ export const CheckoutView: React.FC = () => {
   };
 
   const handleExecutePayment = () => {
+    if (currentBill.isAllServed === false) {
+      showToast('Tidak bisa bayar! Masih ada pesanan di dapur yang belum disajikan.', 'warning');
+      return;
+    }
+
     if (paymentMethod === 'Tunai' && isChangeNegative) {
       showToast('Nominal uang tunai kurang dari total tagihan!', 'warning');
       return;
@@ -113,7 +118,7 @@ export const CheckoutView: React.FC = () => {
     setTimeout(() => {
       setIsProcessing(false);
       settlePayment(currentBill.id, paymentMethod, cashTendered);
-    }, 900);
+    }, 300);
   };
 
   const handleManualRefresh = () => {
@@ -566,16 +571,28 @@ export const CheckoutView: React.FC = () => {
             {/* 3-Point Fast Verification Checklist */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 bg-[#f6f3ee] p-2.5 rounded-xl border border-[#ebe8e3]">
               <div className="flex items-center gap-2 text-xs font-semibold text-[#1c1c19]">
-                <span className="material-symbols-outlined text-emerald-600 text-[18px]">
-                  check_circle
+                <span className={`material-symbols-outlined text-[18px] ${
+                  currentBill.status === 'lunas' || currentBill.isAllServed !== false ? 'text-emerald-600' : 'text-amber-600'
+                }`}>
+                  {currentBill.status === 'lunas' || currentBill.isAllServed !== false ? 'check_circle' : 'skillet'}
                 </span>
-                <span>{currentBill.itemCount || 8} Item Disajikan</span>
+                <span>
+                  {currentBill.status === 'lunas' || currentBill.isAllServed !== false
+                    ? `${currentBill.itemCount || 0} Item Disajikan`
+                    : `${currentBill.itemCount || 0} Item Dimasak Dapur`}
+                </span>
               </div>
               <div className="flex items-center gap-2 text-xs font-semibold text-[#1c1c19]">
-                <span className="material-symbols-outlined text-emerald-600 text-[18px]">
-                  check_circle
+                <span className={`material-symbols-outlined text-[18px] ${
+                  currentBill.status === 'lunas' || currentBill.isAllServed !== false ? 'text-emerald-600' : 'text-amber-600'
+                }`}>
+                  {currentBill.status === 'lunas' || currentBill.isAllServed !== false ? 'check_circle' : 'pending'}
                 </span>
-                <span>0 Pesanan Tertunda</span>
+                <span>
+                  {currentBill.status === 'lunas' || currentBill.isAllServed !== false
+                    ? '0 Pesanan Tertunda'
+                    : `${currentBill.unservedCount || 1} Belum Disajikan`}
+                </span>
               </div>
               <div className="flex items-center gap-2 text-xs font-semibold text-[#1c1c19]">
                 <span className="material-symbols-outlined text-emerald-600 text-[18px]">
@@ -703,6 +720,22 @@ export const CheckoutView: React.FC = () => {
               </div>
             ) : (
               <div className="flex flex-col gap-3 pt-1">
+                {currentBill.isAllServed === false && (
+                  <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900 flex items-start gap-2.5 animate-in fade-in">
+                    <span className="material-symbols-outlined text-[20px] text-amber-700 shrink-0 mt-0.5">
+                      soup_kitchen
+                    </span>
+                    <div>
+                      <span className="font-bold block text-amber-950">
+                        Pesanan Belum Selesai Disajikan ({currentBill.unservedCount || 1} pesanan di dapur)
+                      </span>
+                      <span className="text-[11px] text-amber-800 leading-relaxed block mt-0.5">
+                        Demi mencegah selisih kas dan pembayaran berulang, kasir hanya dapat menerima pembayaran setelah dapur memajukan status pesanan menjadi <strong>Disajikan</strong> di layar Pantau Pesanan (KDS).
+                      </span>
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-sm text-[#3d1018]">Pilihan Metode Pembayaran</span>
                 <span className="text-[11px] text-[#524344] flex items-center gap-1 font-semibold">
@@ -918,8 +951,13 @@ export const CheckoutView: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleExecutePayment}
-                  disabled={isProcessing || bills.length === 0}
-                  className="w-full flex-1 px-5 py-3 rounded-xl bg-[#3d1018] hover:bg-[#58252c] text-white text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-md active:scale-98 transition-all"
+                  disabled={isProcessing || bills.length === 0 || currentBill.isAllServed === false}
+                  className={`w-full flex-1 px-5 py-3 rounded-xl text-white text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-md active:scale-98 transition-all ${
+                    currentBill.isAllServed === false
+                      ? 'bg-[#847374] opacity-75 cursor-not-allowed'
+                      : 'bg-[#3d1018] hover:bg-[#58252c]'
+                  }`}
+                  title={currentBill.isAllServed === false ? 'Harap selesaikan pesanan di dapur terlebih dahulu' : 'Konfirmasi pembayaran kasir'}
                 >
                   {isProcessing ? (
                     <>
@@ -927,6 +965,13 @@ export const CheckoutView: React.FC = () => {
                         sync
                       </span>
                       <span>Memproses Struk &amp; Pembayaran...</span>
+                    </>
+                  ) : currentBill.isAllServed === false ? (
+                    <>
+                      <span className="material-symbols-outlined text-[20px]">skillet</span>
+                      <span>
+                        Menunggu Dapur Menyajikan ({currentBill.unservedCount || 1} pesanan)
+                      </span>
                     </>
                   ) : (
                     <>

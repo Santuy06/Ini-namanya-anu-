@@ -186,7 +186,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const saveRecentReceipt = useCallback((receipt: BillItem) => {
     setRecentReceipts((prev) => {
-      const filtered = prev.filter((r) => r.id !== receipt.id && r.billNumber !== receipt.billNumber);
+      const filtered = prev.filter((r) => {
+        if (r.sessionId && receipt.sessionId) return r.sessionId !== receipt.sessionId;
+        return r.id !== receipt.id && r.billNumber !== receipt.billNumber;
+      });
       const updated = [receipt, ...filtered].slice(0, 50);
       try {
         localStorage.setItem('rg_recent_receipts', JSON.stringify(updated));
@@ -464,6 +467,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const items: OrderItemSummary[] = live.flatMap((o: any) => o.order_items.map((i: any) => ({
       name: i.product_name, quantity: i.quantity, price: Number(i.unit_price), notes: i.note || undefined })));
     const staffOrder = live.find((o: any) => o.profiles?.full_name);
+    const unservedOrders = live.filter((o: any) => o.order_status !== 'served');
+    const isAllServed = unservedOrders.length === 0;
+
     return [{
       id: `bill-${s.session_id}`, sessionId: s.session_id, billNumber: `B-${s.session_id}`, tableNumber: pad(t?.table_number ?? '?'),
       customerName: s.customer_name || 'Tamu', guestCount: s.guest_count, itemCount: items.reduce((a, i) => a + i.quantity, 0), items,
@@ -471,6 +477,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       requestedAt: req ? hhmmColon(req.created_at) : '-', elapsedMinutesAgo: minsSince(req?.created_at ?? s.opened_at),
       waiterName: staffOrder?.profiles?.full_name || 'QR Meja', openedAtTime: `${hhmm(s.opened_at)} WIB`,
       status: req ? 'minta_checkout' : 'belum_dibayar',
+      isAllServed,
+      unservedCount: unservedOrders.length,
     } as BillItem];
   }).sort((a, b) => (a.status === b.status ? 0 : a.status === 'minta_checkout' ? -1 : 1)), [sessions, rawTables, requests]);
   const selectedBill = bills.find((b) => b.id === selectedBillId) || bills[0];
@@ -551,16 +559,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } as TransactionRecord;
   }), [payments]);
 
-  // Sync payments from DB into recent receipts
+  // Sync payments from DB into recent receipts with deduplication
   useEffect(() => {
     if (!payments.length) return;
     const dbReceipts: BillItem[] = transactions.map((t) => t.billData).filter(Boolean) as BillItem[];
     setRecentReceipts((local) => {
       const map = new Map<string, BillItem>();
-      local.forEach((r) => map.set(r.billNumber, r));
+      local.forEach((r) => {
+        const key = r.sessionId ? `sess-${r.sessionId}` : `bill-${r.billNumber}`;
+        map.set(key, r);
+      });
       dbReceipts.forEach((r) => {
-        if (!map.has(r.billNumber)) {
-          map.set(r.billNumber, r);
+        const key = r.sessionId ? `sess-${r.sessionId}` : `bill-${r.billNumber}`;
+        if (!map.has(key)) {
+          map.set(key, r);
         }
       });
       const combined = Array.from(map.values()).slice(0, 50);
@@ -645,14 +657,29 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const settlePayment = async (billId: string, method: PayMethod, amountTendered?: number) => {
     const target = bills.find((b) => b.id === billId);
     if (!target) return;
+
+    if (target.isAllServed === false) {
+      showToast('Tidak bisa bayar! Masih ada pesanan di dapur yang belum disajikan.', 'warning');
+      return;
+    }
+
     const tendered = amountTendered || target.total;
     const { data, error } = await supabase.rpc('pay_session', { p_session: target.sessionId, p_method: METHOD_TO_DB[method], p_received: tendered });
+
+    if (error || data?.error) {
+      const msg = error?.message || data?.error || 'Gagal memproses pembayaran';
+      showToast(msg, 'warning');
+      return;
+    }
+
     const paidBill: BillItem = {
       ...target,
       status: 'lunas',
+      isAllServed: true,
+      unservedCount: 0,
       paymentMethod: METHOD_TO_DB[method] === 'cash' ? 'tunai' : (METHOD_TO_DB[method] as any),
       cashTendered: tendered,
-      changeAmount: Number(data.change) || 0,
+      changeAmount: Number(data?.change) || 0,
       paidAtTime: `${new Date().toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' })} ${new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' }).replace('.', ':')} WIB`,
     };
     saveRecentReceipt(paidBill);
