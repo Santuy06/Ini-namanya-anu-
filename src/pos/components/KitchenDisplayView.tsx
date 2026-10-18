@@ -59,7 +59,6 @@ export const KitchenDisplayView: React.FC = () => {
   const newTickets      = stationTickets.filter((t) => t.status === 'new');
   const preparingTickets = stationTickets.filter((t) => t.status === 'preparing');
   const readyTickets    = stationTickets.filter((t) => t.status === 'ready');
-  const overdueCount    = stationTickets.filter((t) => t.isPriority).length;
 
   const visibleTickets =
     activeLaneFilter === 'all'      ? stationTickets.filter((t) => t.status !== 'served') :
@@ -242,79 +241,7 @@ export const KitchenDisplayView: React.FC = () => {
         </div>
       </section>
 
-      {/* ── 3 Metric cards ─────────────────────────────────────────────── */}
-      <section className="grid grid-cols-3 gap-3 sm:gap-4 mb-5">
-        {/* Baru */}
-        <div className="bg-white border border-[#ebe8e3] rounded-2xl p-3.5 sm:p-5 shadow-xs flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-[#fef3c7] flex items-center justify-center">
-              <span className="material-symbols-outlined text-[20px] sm:text-[22px] text-[#92400e]">receipt_long</span>
-            </div>
-            <div>
-              <p className="text-[10px] sm:text-xs text-[#6b584d] font-medium">Antrean Baru</p>
-              <p className="text-xl sm:text-2xl font-extrabold text-[#1c1c19] tabular-nums leading-tight">
-                {newTickets.length}
-                <span className="text-xs sm:text-sm font-medium text-[#847374] ml-1">tiket</span>
-              </p>
-            </div>
-          </div>
-          <span className="hidden sm:inline text-[11px] font-semibold bg-[#fef3c7] text-[#92400e] px-2.5 py-1 rounded-lg border border-[#fde68a]">
-            Menunggu
-          </span>
-        </div>
 
-        {/* Dimasak */}
-        <div className="bg-white border border-[#ebe8e3] rounded-2xl p-3.5 sm:p-5 shadow-xs flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-[#fff0e6] flex items-center justify-center">
-              <span className="material-symbols-outlined text-[20px] sm:text-[22px] text-[#994703]">skillet</span>
-            </div>
-            <div>
-              <p className="text-[10px] sm:text-xs text-[#6b584d] font-medium">Sedang Dimasak</p>
-              <p className="text-xl sm:text-2xl font-extrabold text-[#1c1c19] tabular-nums leading-tight">
-                {preparingTickets.length}
-                <span className="text-xs sm:text-sm font-medium text-[#847374] ml-1">tiket</span>
-              </p>
-            </div>
-          </div>
-          <span className="hidden sm:inline text-[11px] font-semibold bg-[#fff0e6] text-[#7a3200] px-2.5 py-1 rounded-lg border border-[#fca96c]">
-            Proses Masak
-          </span>
-        </div>
-
-        {/* Perlu Perhatian / Siap Antar */}
-        <div className={`bg-white border rounded-2xl p-3.5 sm:p-5 shadow-xs flex items-center justify-between ${
-          overdueCount > 0 ? 'border-[#ba1a1a] bg-gradient-to-r from-white to-red-50/30' : 'border-[#6aab82] bg-gradient-to-r from-white to-[#f0f7f3]/40'
-        }`}>
-          <div className="flex items-center gap-3">
-            <div className={`w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center ${
-              overdueCount > 0 ? 'bg-[#ffdad6] text-[#ba1a1a]' : 'bg-[#eaf3ee] text-[#2d5a3d]'
-            }`}>
-              <span className="material-symbols-outlined text-[20px] sm:text-[22px]">
-                {overdueCount > 0 ? 'alarm_on' : 'room_service'}
-              </span>
-            </div>
-            <div>
-              <p className="text-[10px] sm:text-xs font-medium text-[#6b584d]">
-                {overdueCount > 0 ? 'Perlu Perhatian' : 'Siap Diantar'}
-              </p>
-              <p className={`text-xl sm:text-2xl font-extrabold tabular-nums leading-tight ${
-                overdueCount > 0 ? 'text-[#ba1a1a]' : 'text-[#2d5a3d]'
-              }`}>
-                {overdueCount > 0 ? overdueCount : readyTickets.length}
-                <span className="text-xs sm:text-sm font-medium text-[#847374] ml-1">tiket</span>
-              </p>
-            </div>
-          </div>
-          <span className={`hidden sm:inline text-[11px] font-bold px-2.5 py-1 rounded-lg border ${
-            overdueCount > 0
-              ? 'bg-[#ffdad6] text-[#ba1a1a] border-[#f49192]'
-              : 'bg-[#eaf3ee] text-[#2d5a3d] border-[#a7c9b4]'
-          }`}>
-            {overdueCount > 0 ? 'Prioritaskan!' : 'Siap Antar'}
-          </span>
-        </div>
-      </section>
 
       {/* ── Mobile tab filter ─────────────────────────────────────────────── */}
       <div className="lg:hidden flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-3">

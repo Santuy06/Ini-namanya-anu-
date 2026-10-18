@@ -76,10 +76,17 @@ interface AppContextType {
   dismissStockWarning: boolean;
   setDismissStockWarning: (dismissed: boolean) => void;
 
+  deleteTable: (tableId: number) => Promise<boolean>;
+  deleteMenuItem: (itemId: number | string) => Promise<boolean>;
+  deleteRawIngredient: (ingredientId: number | string) => Promise<boolean>;
+  refresh: () => Promise<void>;
+  isOnline: boolean;
+
   kitchenTickets: KitchenTicket[];
   advanceTicketStatus: (ticketId: string) => void;
 
   transactions: TransactionRecord[];
+  recentReceipts: BillItem[];
 
   toast: ToastNotification | null;
   showToast: (message: string, type?: 'success' | 'info' | 'warning') => void;
@@ -122,6 +129,17 @@ const toStaffUser = (p: any, email: string): StaffUser => ({
 });
 const homeView = (r: UserRole): AppView => (r === 'kitchen' ? 'pantau-pesanan' : r === 'admin' ? 'dashboard' : 'meja-dan-pelanggan');
 
+const MASTER_CACHE_KEY = 'rg_pos_master_cache_v2';
+const readMasterCache = () => {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(MASTER_CACHE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
+
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<StaffUser>(GUEST_USER);
   const [currentRole, setCurrentRoleState] = useState<UserRole>('kasir');
@@ -132,13 +150,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [viewportMode, setViewportMode] = useState<'auto' | 'mobile' | 'desktop'>('auto');
   const [outletName, setOutletName] = useState('Rawon Gusti Surabaya');
 
-  // data dari database
-  const [rawTables, setRawTables] = useState<any[]>([]);
+  const masterCache = readMasterCache();
+  const [isOnline, setIsOnline] = useState<boolean>(typeof navigator !== 'undefined' ? navigator.onLine : true);
+
+  // data dari database (dengan fallback awal ke cache offline lokal)
+  const [rawTables, setRawTables] = useState<any[]>(() => masterCache?.tables || []);
   const [sessions, setSessions] = useState<any[]>([]);
   const [requests, setRequests] = useState<any[]>([]);
-  const [products, setProducts] = useState<any[]>([]);
-  const [categories, setCategories] = useState<any[]>([]);
-  const [rawIngredients, setRawIngredients] = useState<RawIngredient[]>([]);
+  const [products, setProducts] = useState<any[]>(() => masterCache?.products || []);
+  const [categories, setCategories] = useState<any[]>(() => masterCache?.categories || []);
+  const [rawIngredients, setRawIngredients] = useState<RawIngredient[]>(() => masterCache?.ingredients || []);
   const [payments, setPayments] = useState<any[]>([]);
   const [now, setNow] = useState(Date.now());
 
@@ -154,7 +175,30 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [toast, setToast] = useState<ToastNotification | null>(null);
   const [receiptModalData, setReceiptModalData] = useState<BillItem | null>(null);
   const [qrModalTable, setQrModalTable] = useState<TableItem | null>(null);
+  const [recentReceipts, setRecentReceipts] = useState<BillItem[]>(() => {
+    try {
+      const saved = localStorage.getItem('rg_recent_receipts');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
 
+  const saveRecentReceipt = useCallback((receipt: BillItem) => {
+    setRecentReceipts((prev) => {
+      const filtered = prev.filter((r) => r.id !== receipt.id && r.billNumber !== receipt.billNumber);
+      const updated = [receipt, ...filtered].slice(0, 50);
+      try {
+        localStorage.setItem('rg_recent_receipts', JSON.stringify(updated));
+      } catch (err) {
+        console.warn('Failed to save receipt to localStorage', err);
+      }
+      return updated;
+    });
+  }, []);
+
+  const rawTablesRef = useRef<any[]>([]);
+  rawTablesRef.current = rawTables;
   const seenRequests = useRef<Set<number> | null>(null);
   const roleRef = useRef<UserRole>('kasir');
 
@@ -164,8 +208,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setTimeout(() => setToast((c) => (c?.id === id ? null : c)), 2800);
   }, []);
 
-  // ---------- muat data ----------
-  // ---------- muat data katalog statis (hanya sekali saat login atau ada perubahan master) ----------
+  const showToastRef = useRef(showToast);
+  showToastRef.current = showToast;
+
+  // ---------- muat data katalog statis (hybrid offline-online) ----------
   const loadMasterData = useCallback(async () => {
     try {
       const [cats, prods, tbls, ings] = await Promise.all([
@@ -174,23 +220,40 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         supabase.from('tables').select('*').eq('is_active', true).order('table_number'),
         supabase.from('ingredients').select('*').order('ingredient_id'),
       ]);
-      if (cats.data) setCategories(cats.data);
-      if (prods.data) setProducts(prods.data);
-      if (tbls.data) setRawTables(tbls.data);
-      if (ings.data) {
-        setRawIngredients(ings.data.map((i: any): RawIngredient => ({
-          id: String(i.ingredient_id), code: i.code, name: i.name, category: i.category,
-          currentStock: Number(i.current_stock), minimumStock: Number(i.minimum_stock), unit: i.unit,
-          costPerUnit: Number(i.cost_per_unit), supplier: i.supplier || '-',
-          lastRestocked: idDate(i.last_restocked), linkedMenuItems: i.linked_menu_items || [],
-        })));
+
+      const loadedCats = cats.data || [];
+      const loadedProds = prods.data || [];
+      const loadedTbls = tbls.data || [];
+      const loadedIngs = ings.data ? ings.data.map((i: any): RawIngredient => ({
+        id: String(i.ingredient_id), code: i.code, name: i.name, category: i.category,
+        currentStock: Number(i.current_stock), minimumStock: Number(i.minimum_stock), unit: i.unit,
+        costPerUnit: Number(i.cost_per_unit), supplier: i.supplier || '-',
+        lastRestocked: idDate(i.last_restocked), linkedMenuItems: i.linked_menu_items || [],
+      })) : [];
+
+      if (loadedCats.length) setCategories(loadedCats);
+      if (loadedProds.length) setProducts(loadedProds);
+      if (loadedTbls.length) setRawTables(loadedTbls);
+      if (loadedIngs.length) setRawIngredients(loadedIngs);
+
+      // Simpan ke cache offline lokal
+      try {
+        localStorage.setItem(MASTER_CACHE_KEY, JSON.stringify({
+          categories: loadedCats.length ? loadedCats : (masterCache?.categories || []),
+          products: loadedProds.length ? loadedProds : (masterCache?.products || []),
+          tables: loadedTbls.length ? loadedTbls : (masterCache?.tables || []),
+          ingredients: loadedIngs.length ? loadedIngs : (masterCache?.ingredients || []),
+          cachedAt: Date.now(),
+        }));
+      } catch (err) {
+        console.warn('[pos cache write error]', err);
       }
     } catch (e) {
-      console.warn('[supabase master load error]', e);
+      console.warn('[supabase master load fallback to cache]', e);
     }
   }, []);
 
-  // ---------- muat data operasional dinamis (sesi meja, panggilan pelayan, pembayaran hari ini) ----------
+  // ---------- muat data operasional dinamis ----------
   const refreshDynamic = useCallback(async () => {
     const role = roleRef.current;
     const canSeeMoney = role !== 'kitchen';
@@ -201,13 +264,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           .is('closed_at', null),
         supabase.from('service_requests').select('*').eq('status', 'pending'),
         canSeeMoney
-          ? supabase.from('payments').select('payment_id,method,amount,paid_at,orders(order_number,order_source,table_sessions(tables(table_number)))')
+          ? supabase.from('payments').select('payment_id,transaction_code,method,amount,cash_received,change_amount,paid_at,orders(order_id,order_number,order_source,total,created_at,profiles(full_name),table_sessions(session_id,customer_name,guest_count,tables(table_number)),order_items(order_item_id,product_name,unit_price,quantity,note))')
               .eq('status', 'paid').gte('paid_at', today() + 'T00:00:00+07:00').order('paid_at', { ascending: false })
           : Promise.resolve({ data: [] }),
       ]);
 
       const reqData = reqs.data ?? [];
-      const tblData = rawTables;
+      const tblData = rawTablesRef.current;
 
       if (ses.data) setSessions(ses.data);
       if (reqs.data) setRequests(reqData);
@@ -239,7 +302,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           }
           newReqs.forEach((r: any) => {
             const t = tblData.find((x: any) => x.table_id === r.table_id);
-            showToast(`Meja ${pad(t?.table_number ?? '?')} ${r.kind === 'checkout' ? 'minta tagihan' : 'memanggil pelayan'}`, 'warning');
+            showToastRef.current(`Meja ${pad(t?.table_number ?? '?')} ${r.kind === 'checkout' ? 'minta tagihan' : 'memanggil pelayan'}`, 'warning');
           });
         }
       }
@@ -248,7 +311,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch (e) {
       console.warn('[supabase dynamic refresh error]', e);
     }
-  }, [rawTables, showToast]);
+  }, []);
 
   const refresh = useCallback(async () => {
     await Promise.all([loadMasterData(), refreshDynamic()]);
@@ -294,13 +357,38 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // hanya admin yang boleh "melihat sebagai" peran lain (pratinjau tampilan)
   const setCurrentRole = (r: UserRole) => { if (currentUser.role === 'admin') setCurrentRoleState(r); };
 
-  // data awal + realtime cerdas (hemat koneksi Supabase & pgbouncer)
+  // Status koneksi jaringan (Hybrid Offline / Online)
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      showToastRef.current('Koneksi internet aktif. Menyinkronkan data...', 'info');
+      refresh();
+    };
+    const handleOffline = () => {
+      setIsOnline(false);
+      showToastRef.current('Mode Offline aktif: Operasi menggunakan cache lokal.', 'warning');
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, [refresh]);
+
+  // Sinkronisasi realtime: HANYA mengambil data saat terjadi MUTASI nyata (INSERT, UPDATE, DELETE)
+  // Tidak ada polling setiap 1 detik
   useEffect(() => {
     if (!isLoggedIn) return;
     refresh();
 
     let debounceTimer: ReturnType<typeof setTimeout>;
     const handleRealtimeChange = (payload: any) => {
+      // HANYA ambil data baru saat ada mutasi data nyata (INSERT, UPDATE, DELETE)
+      const eventType = payload?.eventType;
+      if (!eventType || !['INSERT', 'UPDATE', 'DELETE'].includes(eventType)) return;
+
       clearTimeout(debounceTimer);
       debounceTimer = setTimeout(() => {
         const table = payload?.table;
@@ -308,41 +396,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           loadMasterData();
         }
         refreshDynamic();
-      }, 700);
+      }, 500);
     };
 
-    const ch = supabase.channel('pos-live');
+    const ch = supabase.channel('pos-mutations-live');
     ['orders', 'order_items', 'payments', 'table_sessions', 'service_requests', 'products', 'tables', 'ingredients'].forEach((t) =>
       ch.on('postgres_changes', { event: '*', schema: 'public', table: t }, handleRealtimeChange));
     ch.subscribe();
 
-    // Polling cerdas: HANYA berjalan jika tab sedang aktif dilihat (tidak polling saat tab diminimalkan/di latar belakang)
-    // Interval dinaikkan ke 60 detik sebagai fail-safe cadangan
-    const pollInterval = setInterval(() => {
-      if (!document.hidden) {
-        refreshDynamic();
-      }
-    }, 60000);
-
-    // Saat pengguna membuka kembali tab browser setelah diminimalkan, refresh sekali
-    const onVisibilityChange = () => {
-      if (!document.hidden) {
-        refreshDynamic();
-      }
-    };
-    document.addEventListener('visibilitychange', onVisibilityChange);
-    window.addEventListener('focus', onVisibilityChange);
-
     return () => {
       clearTimeout(debounceTimer);
-      clearInterval(pollInterval);
-      document.removeEventListener('visibilitychange', onVisibilityChange);
-      window.removeEventListener('focus', onVisibilityChange);
       supabase.removeChannel(ch);
     };
   }, [isLoggedIn, refresh, loadMasterData, refreshDynamic]);
 
-  useEffect(() => { const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t); }, []);
+  // Interval pembaruan menit diubah ke 30 detik (bukan setiap 1 detik) untuk efisiensi CPU & render
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 30000);
+    return () => clearInterval(t);
+  }, []);
 
   // ---------- turunan: menu ----------
   const productCategory = useMemo(() => new Map(products.map((p) => [p.product_id, p.categories?.name as string])), [products]);
@@ -424,15 +496,82 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }).sort((a, b) => b.elapsedSeconds - a.elapsedSeconds), [sessions, rawTables, productCategory, now]);
 
   const transactions: TransactionRecord[] = useMemo(() => payments.map((p) => {
-    const total = Number(p.amount); const subtotal = Math.round(total / 1.155);
+    const total = Number(p.amount);
+    const subtotal = Math.round(total / 1.155);
+    const tax = total - subtotal;
+    const orderItems: OrderItemSummary[] = (p.orders?.order_items || []).map((i: any) => ({
+      name: i.product_name,
+      quantity: i.quantity,
+      price: Number(i.unit_price),
+      notes: i.note || undefined,
+    }));
+    const tableNum = pad(p.orders?.table_sessions?.tables?.table_number ?? '?');
+    const custName = p.orders?.table_sessions?.customer_name || 'Pelanggan';
+    const guestCount = p.orders?.table_sessions?.guest_count || 1;
+    const waiter = p.orders?.profiles?.full_name || (p.orders?.order_source === 'qr' ? 'QR meja' : 'Kasir');
+    const methodLabel = METHOD_FROM_DB[p.method] ?? 'Tunai';
+
+    const billData: BillItem = {
+      id: `paid-bill-${p.payment_id}`,
+      sessionId: p.orders?.table_sessions?.session_id,
+      billNumber: p.orders?.order_number || `B-${p.payment_id}`,
+      tableNumber: tableNum,
+      customerName: custName,
+      guestCount,
+      itemCount: orderItems.reduce((a, i) => a + i.quantity, 0) || 1,
+      items: orderItems.length > 0 ? orderItems : [{ name: 'Menu Pesanan Restoran', quantity: 1, price: subtotal }],
+      subtotal: orderItems.length > 0 ? orderItems.reduce((a, i) => a + (i.price * i.quantity), 0) : subtotal,
+      serviceFee: Math.round(subtotal * 0.05),
+      tax,
+      total,
+      requestedAt: hhmmColon(p.paid_at),
+      elapsedMinutesAgo: 0,
+      waiterName: waiter,
+      openedAtTime: `${hhmm(p.orders?.created_at || p.paid_at)} WIB`,
+      status: 'lunas',
+      paymentMethod: p.method === 'cash' ? 'tunai' : (p.method as any),
+      cashTendered: Number(p.cash_received) || total,
+      changeAmount: Number(p.change_amount) || 0,
+      paidAtTime: `${new Date(p.paid_at).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' })} ${hhmmColon(p.paid_at)} WIB`,
+    };
+
     return {
-      id: `trx-${p.payment_id}`, code: `#${p.orders.order_number}`, time: hhmmColon(p.paid_at),
+      id: `trx-${p.payment_id}`,
+      code: `#${p.orders?.order_number || p.transaction_code || p.payment_id}`,
+      time: hhmmColon(p.paid_at),
       at: p.paid_at,
-      typeMeja: `Meja ${pad(p.orders.table_sessions?.tables?.table_number ?? '?')}`,
-      source: p.orders.order_source === 'qr' ? 'QR meja' : 'Manual', method: METHOD_FROM_DB[p.method] ?? 'Tunai',
-      subtotal, tax: total - subtotal, total, status: 'Lunas',
+      typeMeja: `Meja ${tableNum}`,
+      source: p.orders?.order_source === 'qr' ? 'QR meja' : 'Manual',
+      method: methodLabel,
+      subtotal,
+      tax,
+      total,
+      status: 'Lunas',
+      billData,
     } as TransactionRecord;
   }), [payments]);
+
+  // Sync payments from DB into recent receipts
+  useEffect(() => {
+    if (!payments.length) return;
+    const dbReceipts: BillItem[] = transactions.map((t) => t.billData).filter(Boolean) as BillItem[];
+    setRecentReceipts((local) => {
+      const map = new Map<string, BillItem>();
+      local.forEach((r) => map.set(r.billNumber, r));
+      dbReceipts.forEach((r) => {
+        if (!map.has(r.billNumber)) {
+          map.set(r.billNumber, r);
+        }
+      });
+      const combined = Array.from(map.values()).slice(0, 50);
+      try {
+        localStorage.setItem('rg_recent_receipts', JSON.stringify(combined));
+      } catch {
+        // ignore
+      }
+      return combined;
+    });
+  }, [payments, transactions]);
 
   const lowStockIngredients = rawIngredients.filter((i) => i.currentStock <= i.minimumStock);
 
@@ -459,6 +598,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return await run(
       supabase.from('tables').insert({ table_number: tableNumber, capacity, area, is_active: true }),
       `Meja ${tableNumber} berhasil ditambahkan`
+    );
+  };
+  const deleteTable = async (tableId: number) => {
+    return await run(
+      supabase.from('tables').delete().eq('table_id', tableId),
+      'Meja berhasil dihapus'
     );
   };
 
@@ -502,9 +647,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (!target) return;
     const tendered = amountTendered || target.total;
     const { data, error } = await supabase.rpc('pay_session', { p_session: target.sessionId, p_method: METHOD_TO_DB[method], p_received: tendered });
-    if (error || data?.error) { showToast(error?.message || data.error, 'warning'); return; }
-    setReceiptModalData({ ...target, status: 'lunas', paymentMethod: METHOD_TO_DB[method] === 'cash' ? 'tunai' : (METHOD_TO_DB[method] as any),
-      cashTendered: tendered, changeAmount: Number(data.change) });
+    const paidBill: BillItem = {
+      ...target,
+      status: 'lunas',
+      paymentMethod: METHOD_TO_DB[method] === 'cash' ? 'tunai' : (METHOD_TO_DB[method] as any),
+      cashTendered: tendered,
+      changeAmount: Number(data.change) || 0,
+      paidAtTime: `${new Date().toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' })} ${new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' }).replace('.', ':')} WIB`,
+    };
+    saveRecentReceipt(paidBill);
+    setReceiptModalData(paidBill);
     setSelectedBillId('');
     showToast(`Pembayaran Meja ${target.tableNumber} LUNAS via ${method}!`, 'success');
     await refresh();
@@ -537,6 +689,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const code = item.code && !/^RG-\d+$/.test(item.code) ? item.code : 'P' + Date.now().toString().slice(-6);
     await run(supabase.from('products').insert({ ...(await productPayload(item)), product_code: code }), `Menu baru ${item.name} berhasil ditambahkan!`);
   };
+  const deleteMenuItem = async (itemId: number | string) => {
+    return await run(supabase.from('products').delete().eq('product_id', Number(itemId)), 'Menu berhasil dihapus');
+  };
 
   // ---------- aksi: bahan baku ----------
   const ingUpdate = (id: string, patch: any, ok?: string) => run(supabase.from('ingredients').update(patch).eq('ingredient_id', Number(id)), ok);
@@ -552,22 +707,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       minimum_stock: i.minimumStock, unit: i.unit, cost_per_unit: i.costPerUnit, supplier: i.supplier, linked_menu_items: i.linkedMenuItems,
     }), `Bahan baku ${i.name} berhasil ditambahkan!`);
   };
+  const deleteRawIngredient = async (ingredientId: number | string) => {
+    return await run(supabase.from('ingredients').delete().eq('ingredient_id', Number(ingredientId)), 'Bahan baku berhasil dihapus');
+  };
 
   return (
     <AppContext.Provider value={{
       currentUser, currentRole, setCurrentRole, isLoggedIn, authLoading, dataReady, login, logout,
       activeView, setActiveView, viewportMode, setViewportMode, outletName, setOutletName,
-      tables, selectedTableId, setSelectedTableId, updateTable, addTable,
+      tables, selectedTableId, setSelectedTableId, updateTable, addTable, deleteTable,
       cartItems, orderTableNumber, setOrderTableNumber, orderCustomerName, setOrderCustomerName, orderGuestCount, setOrderGuestCount,
       kitchenGeneralNote, setKitchenGeneralNote, addToCart, removeFromCart, updateCartQuantity, updateCartItemNotes, clearCart,
       sendOrderToKitchen, saveDraftOrder,
       bills, selectedBillId, setSelectedBillId, selectedBill, settlePayment,
-      menuItems, menuCategories, updateMenuItem, addMenuItem,
-      rawIngredients, lowStockIngredients, updateIngredientStock, restockIngredient, updateIngredientMinimum, addRawIngredient,
+      menuItems, menuCategories, updateMenuItem, addMenuItem, deleteMenuItem,
+      rawIngredients, lowStockIngredients, updateIngredientStock, restockIngredient, updateIngredientMinimum, addRawIngredient, deleteRawIngredient,
       dismissStockWarning, setDismissStockWarning,
-      kitchenTickets, advanceTicketStatus, transactions,
+      kitchenTickets, advanceTicketStatus, transactions, recentReceipts,
       toast, showToast, receiptModalData, openReceiptModal: setReceiptModalData, closeReceiptModal: () => setReceiptModalData(null),
       qrModalTable, openQrModal: setQrModalTable, closeQrModal: () => setQrModalTable(null),
+      refresh, isOnline,
     }}>
       {children}
     </AppContext.Provider>

@@ -102,6 +102,7 @@ export interface BillItem {
   paymentMethod?: 'tunai' | 'qris' | 'debit';
   cashTendered?: number;
   changeAmount?: number;
+  paidAtTime?: string;
 }
 
 export interface TransactionRecord {
@@ -116,6 +117,7 @@ export interface TransactionRecord {
   tax: number;
   total: number;
   status: 'Lunas' | 'Batal';
+  billData?: BillItem;
 }
 
 export interface KitchenTicketItem {

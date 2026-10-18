@@ -10,8 +10,13 @@ export const CheckoutView: React.FC = () => {
     selectedBill,
     settlePayment,
     openReceiptModal,
-    showToast
+    showToast,
+    recentReceipts,
+    refresh,
   } = useApp();
+
+  const [queueTab, setQueueTab] = useState<'unpaid' | 'history'>('unpaid');
+  const [selectedHistoryBill, setSelectedHistoryBill] = useState<BillItem | null>(null);
 
   const [paymentMethod, setPaymentMethod] = useState<'Tunai' | 'QRIS' | 'Kartu Debit'>('Tunai');
   const [cashTendered, setCashTendered] = useState<number>(250000);
@@ -20,24 +25,58 @@ export const CheckoutView: React.FC = () => {
   const [showQrisCode, setShowQrisCode] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
 
-  const currentBill: BillItem = selectedBill || bills[0] || {
-    id: 'empty-bill',
-    billNumber: 'B-000',
-    tableNumber: '00',
-    customerName: 'Tamu',
-    guestCount: 0,
-    itemCount: 0,
-    items: [],
-    subtotal: 0,
-    serviceFee: 0,
-    tax: 0,
-    total: 0,
-    requestedAt: '12:00',
-    elapsedMinutesAgo: 0,
-    waiterName: '-',
-    openedAtTime: '12.00 WIB',
-    status: 'belum_dibayar'
-  };
+  const filteredBills = bills.filter(
+    (b) =>
+      b.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      b.tableNumber.includes(searchQuery) ||
+      b.billNumber.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const filteredHistory = recentReceipts.filter(
+    (b) =>
+      b.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      b.tableNumber.includes(searchQuery) ||
+      b.billNumber.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const currentBill: BillItem =
+    queueTab === 'history'
+      ? selectedHistoryBill || filteredHistory[0] || {
+          id: 'empty-history',
+          billNumber: '-',
+          tableNumber: '-',
+          customerName: 'Tidak ada riwayat',
+          guestCount: 0,
+          itemCount: 0,
+          items: [],
+          subtotal: 0,
+          serviceFee: 0,
+          tax: 0,
+          total: 0,
+          requestedAt: '-',
+          elapsedMinutesAgo: 0,
+          waiterName: '-',
+          openedAtTime: '-',
+          status: 'lunas',
+        }
+      : selectedBill || filteredBills[0] || bills[0] || {
+          id: 'empty-bill',
+          billNumber: 'B-000',
+          tableNumber: '00',
+          customerName: 'Tamu',
+          guestCount: 0,
+          itemCount: 0,
+          items: [],
+          subtotal: 0,
+          serviceFee: 0,
+          tax: 0,
+          total: 0,
+          requestedAt: '12:00',
+          elapsedMinutesAgo: 0,
+          waiterName: '-',
+          openedAtTime: '12.00 WIB',
+          status: 'belum_dibayar',
+        };
 
   // Change computation
   const change = cashTendered - currentBill.total;
@@ -78,15 +117,9 @@ export const CheckoutView: React.FC = () => {
   };
 
   const handleManualRefresh = () => {
+    refresh();
     showToast('Antrean tagihan diperbarui live dari meja & waiter', 'info');
   };
-
-  const filteredBills = bills.filter(
-    (b) =>
-      b.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      b.tableNumber.includes(searchQuery) ||
-      b.billNumber.toLowerCase().includes(searchQuery.toLowerCase())
-  );
 
   const totalQueueAmount = bills.reduce((acc, b) => acc + b.total, 0);
   const totalGuestsWaiting = bills.reduce((acc, b) => acc + b.guestCount, 0);
@@ -96,15 +129,9 @@ export const CheckoutView: React.FC = () => {
       {/* Top Header & Fast Live Refresh */}
       <div className="pt-3 pb-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl shadow-sm border border-[#ebe8e3] mb-4">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="font-serif text-2xl sm:text-3xl font-bold text-[#3d1018]">
-              Checkout Pelanggan
-            </h1>
-            <span className="px-2.5 py-0.5 rounded-full bg-[#ffdbc9] text-[#753400] text-xs font-bold flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#994703] animate-ping"></span>
-              {bills.length} Antrean Kasir
-            </span>
-          </div>
+          <h1 className="font-serif text-2xl sm:text-3xl font-bold text-[#3d1018]">
+            Checkout Pelanggan
+          </h1>
           <p className="text-xs text-[#524344] mt-0.5">
             Daftar bill yang diminta selesai. Pilih bill aktif untuk verifikasi dan penyelesaian kasir.
           </p>
@@ -198,14 +225,16 @@ export const CheckoutView: React.FC = () => {
 
         <div className="bg-white p-4 rounded-2xl border border-[#ebe8e3] shadow-sm flex items-center justify-between">
           <div className="flex flex-col">
-            <span className="text-xs text-[#524344]">Waktu Tunggu Terlama</span>
+            <span className="text-xs text-[#524344]">Struk Lunas Tersimpan</span>
             <div className="flex items-baseline gap-1 mt-0.5">
-              <span className="text-2xl font-bold text-[#1c1c19] tabular-nums">4 menit</span>
+              <span className="text-2xl font-bold text-emerald-800 tabular-nums">
+                {recentReceipts.length} struk
+              </span>
             </div>
-            <span className="text-[11px] text-[#524344]">Meja 03 • Ayu</span>
+            <span className="text-[11px] text-emerald-700 font-medium">Bisa cetak ulang kapan saja</span>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-[#f0ede9] flex items-center justify-center text-[#847374]">
-            <span className="material-symbols-outlined text-[22px]">timer</span>
+          <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-700">
+            <span className="material-symbols-outlined text-[22px]">print</span>
           </div>
         </div>
       </div>
@@ -232,110 +261,251 @@ export const CheckoutView: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
         {/* Left Column: Bill Queue (5 cols) */}
         <div className="lg:col-span-5 flex flex-col gap-3">
-          <div className="flex items-center justify-between px-1">
-            <span className="text-[11px] font-bold text-[#524344] uppercase tracking-wider">
-              Daftar Antrean Tagihan ({bills.length})
-            </span>
-            <span className="text-[11px] text-[#994703] font-semibold">
-              Semua item kitchen disajikan
-            </span>
+          {/* Tab Filter: Antrean vs Riwayat Struk */}
+          <div className="flex items-center bg-[#f0ede9] p-1 rounded-xl">
+            <button
+              type="button"
+              onClick={() => setQueueTab('unpaid')}
+              className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                queueTab === 'unpaid'
+                  ? 'bg-white text-[#3d1018] shadow-xs'
+                  : 'text-[#524344] hover:text-[#1c1c19]'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[16px]">receipt_long</span>
+              <span>Antrean Tagihan ({bills.length})</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setQueueTab('history')}
+              className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                queueTab === 'history'
+                  ? 'bg-white text-[#3d1018] shadow-xs'
+                  : 'text-[#524344] hover:text-[#1c1c19]'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[16px]">history</span>
+              <span>Riwayat Struk ({recentReceipts.length})</span>
+            </button>
           </div>
 
-          {bills.length === 0 ? (
-            <div className="bg-white rounded-2xl p-8 text-center border border-[#ebe8e3] shadow-sm flex flex-col items-center">
-              <span className="material-symbols-outlined text-4xl text-emerald-600 mb-2">
-                check_circle
-              </span>
-              <p className="font-serif font-bold text-base text-[#1c1c19]">
-                Tidak Ada Antrean Checkout
-              </p>
-              <p className="text-xs text-[#524344] mt-1">
-                Semua meja telah diselesaikan atau masih menikmati santapan.
-              </p>
-            </div>
-          ) : (
-            filteredBills.map((bill) => {
-              const isSelected = bill.id === currentBill.id;
-              return (
-                <div
-                  key={bill.id}
-                  onClick={() => setSelectedBillId(bill.id)}
-                  className={`cursor-pointer transition-all rounded-2xl p-4 shadow-sm border relative overflow-hidden ${
-                    isSelected
-                      ? 'bg-gradient-to-r from-[#ffdbc9]/30 via-white to-white border-[#994703] shadow-md ring-1 ring-[#994703]'
-                      : 'bg-white hover:bg-[#f6f3ee] border-[#ebe8e3]'
-                  }`}
-                >
-                  {isSelected && (
-                    <div className="absolute top-0 left-0 bottom-0 w-1.5 bg-[#994703]"></div>
-                  )}
+          {queueTab === 'unpaid' ? (
+            <>
+              <div className="flex items-center justify-between px-1">
+                <span className="text-[11px] font-bold text-[#524344] uppercase tracking-wider">
+                  Daftar Antrean Tagihan ({bills.length})
+                </span>
+                <span className="text-[11px] text-[#994703] font-semibold">
+                  Semua item kitchen disajikan
+                </span>
+              </div>
 
-                  <div className="flex items-start justify-between gap-3 pl-1">
-                    <div className="flex items-start gap-3">
-                      <div
-                        className={`w-12 h-12 rounded-xl flex flex-col items-center justify-center font-bold shrink-0 shadow-xs ${
-                          isSelected
-                            ? 'bg-[#994703] text-white'
-                            : 'bg-[#f0ede9] text-[#1c1c19]'
-                        }`}
-                      >
-                        <span className="text-[9px] uppercase leading-none opacity-80">Meja</span>
-                        <span className="text-lg tabular-nums leading-tight">{bill.tableNumber}</span>
-                      </div>
-
-                      <div className="flex flex-col min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <span className="font-bold text-sm text-[#1c1c19] truncate">
-                            {bill.customerName}
-                          </span>
-                          {isSelected && (
-                            <span className="px-1.5 py-0.2 rounded bg-[#994703] text-white text-[10px] font-bold">
-                              Dipilih
-                            </span>
-                          )}
-                        </div>
-
-                        <div className="flex items-center gap-1.5 text-[#524344] text-xs mt-0.5">
-                          <span>{bill.billNumber}</span>
-                          <span>•</span>
-                          <span>{bill.guestCount} Tamu</span>
-                          <span>•</span>
-                          <span className="font-semibold text-[#3d1018]">
-                            {bill.itemCount} item
-                          </span>
-                        </div>
-
-                        <div className="flex items-center gap-1 text-[11px] text-[#847374] mt-1.5">
-                          <span className="material-symbols-outlined text-[14px] text-[#994703]">
-                            schedule
-                          </span>
-                          <span>
-                            Diminta {bill.requestedAt} ({bill.elapsedMinutesAgo} mnt lalu)
-                          </span>
-                          <span>•</span>
-                          <span>Waiter: {bill.waiterName}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-col items-end shrink-0">
-                      <span className="font-bold text-sm text-[#3d1018] tabular-nums">
-                        Rp {bill.total.toLocaleString('id-ID')}
-                      </span>
-                      <span
-                        className={`px-2 py-0.5 rounded-full text-[10px] font-bold mt-1 ${
-                          bill.status === 'minta_checkout'
-                            ? 'bg-[#ffdbc9] text-[#753400]'
-                            : 'bg-[#f0ede9] text-[#524344]'
-                        }`}
-                      >
-                        {bill.status === 'minta_checkout' ? 'Minta checkout' : 'Belum dibayar'}
-                      </span>
-                    </div>
-                  </div>
+              {bills.length === 0 ? (
+                <div className="bg-white rounded-2xl p-8 text-center border border-[#ebe8e3] shadow-sm flex flex-col items-center">
+                  <span className="material-symbols-outlined text-4xl text-emerald-600 mb-2">
+                    check_circle
+                  </span>
+                  <p className="font-serif font-bold text-base text-[#1c1c19]">
+                    Tidak Ada Antrean Checkout
+                  </p>
+                  <p className="text-xs text-[#524344] mt-1">
+                    Semua meja telah diselesaikan atau masih menikmati santapan.
+                  </p>
                 </div>
-              );
-            })
+              ) : (
+                filteredBills.map((bill) => {
+                  const isSelected = bill.id === currentBill.id;
+                  return (
+                    <div
+                      key={bill.id}
+                      onClick={() => setSelectedBillId(bill.id)}
+                      className={`cursor-pointer transition-all rounded-2xl p-4 shadow-sm border relative overflow-hidden ${
+                        isSelected
+                          ? 'bg-gradient-to-r from-[#ffdbc9]/30 via-white to-white border-[#994703] shadow-md ring-1 ring-[#994703]'
+                          : 'bg-white hover:bg-[#f6f3ee] border-[#ebe8e3]'
+                      }`}
+                    >
+                      {isSelected && (
+                        <div className="absolute top-0 left-0 bottom-0 w-1.5 bg-[#994703]"></div>
+                      )}
+
+                      <div className="flex items-start justify-between gap-3 pl-1">
+                        <div className="flex items-start gap-3">
+                          <div
+                            className={`w-12 h-12 rounded-xl flex flex-col items-center justify-center font-bold shrink-0 shadow-xs ${
+                              isSelected
+                                ? 'bg-[#994703] text-white'
+                                : 'bg-[#f0ede9] text-[#1c1c19]'
+                            }`}
+                          >
+                            <span className="text-[9px] uppercase leading-none opacity-80">Meja</span>
+                            <span className="text-lg tabular-nums leading-tight">{bill.tableNumber}</span>
+                          </div>
+
+                          <div className="flex flex-col min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-bold text-sm text-[#1c1c19] truncate">
+                                {bill.customerName}
+                              </span>
+                              {isSelected && (
+                                <span className="px-1.5 py-0.2 rounded bg-[#994703] text-white text-[10px] font-bold">
+                                  Dipilih
+                                </span>
+                              )}
+                            </div>
+
+                            <div className="flex items-center gap-1.5 text-[#524344] text-xs mt-0.5">
+                              <span>{bill.billNumber}</span>
+                              <span>•</span>
+                              <span>{bill.guestCount} Tamu</span>
+                              <span>•</span>
+                              <span className="font-semibold text-[#3d1018]">
+                                {bill.itemCount} item
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-1 text-[11px] text-[#847374] mt-1.5">
+                              <span className="material-symbols-outlined text-[14px] text-[#994703]">
+                                schedule
+                              </span>
+                              <span>
+                                Diminta {bill.requestedAt} ({bill.elapsedMinutesAgo} mnt lalu)
+                              </span>
+                              <span>•</span>
+                              <span>Waiter: {bill.waiterName}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col items-end shrink-0">
+                          <span className="font-bold text-sm text-[#3d1018] tabular-nums">
+                            Rp {bill.total.toLocaleString('id-ID')}
+                          </span>
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-[10px] font-bold mt-1 ${
+                              bill.status === 'minta_checkout'
+                                ? 'bg-[#ffdbc9] text-[#753400]'
+                                : 'bg-[#f0ede9] text-[#524344]'
+                            }`}
+                          >
+                            {bill.status === 'minta_checkout' ? 'Minta checkout' : 'Belum dibayar'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </>
+          ) : (
+            <>
+              <div className="flex items-center justify-between px-1">
+                <span className="text-[11px] font-bold text-[#524344] uppercase tracking-wider">
+                  Riwayat Pembayaran &amp; Struk ({filteredHistory.length})
+                </span>
+                <span className="text-[11px] text-emerald-700 font-semibold">
+                  Tersimpan Otomatis
+                </span>
+              </div>
+
+              {filteredHistory.length === 0 ? (
+                <div className="bg-white rounded-2xl p-8 text-center border border-[#ebe8e3] shadow-sm flex flex-col items-center">
+                  <span className="material-symbols-outlined text-4xl text-[#847374] mb-2">
+                    history
+                  </span>
+                  <p className="font-serif font-bold text-base text-[#1c1c19]">
+                    Belum Ada Riwayat Transaksi
+                  </p>
+                  <p className="text-xs text-[#524344] mt-1">
+                    Transaksi yang selesai dibayar kasir akan otomatis tersimpan di sini dan bukti struknya bisa dicetak ulang kapan saja.
+                  </p>
+                </div>
+              ) : (
+                filteredHistory.map((bill) => {
+                  const isSelected = bill.id === currentBill.id;
+                  return (
+                    <div
+                      key={bill.id}
+                      onClick={() => setSelectedHistoryBill(bill)}
+                      className={`cursor-pointer transition-all rounded-2xl p-4 shadow-sm border relative overflow-hidden ${
+                        isSelected
+                          ? 'bg-gradient-to-r from-emerald-50/50 via-white to-white border-emerald-600 shadow-md ring-1 ring-emerald-600'
+                          : 'bg-white hover:bg-[#f6f3ee] border-[#ebe8e3]'
+                      }`}
+                    >
+                      {isSelected && (
+                        <div className="absolute top-0 left-0 bottom-0 w-1.5 bg-emerald-600"></div>
+                      )}
+
+                      <div className="flex items-start justify-between gap-3 pl-1">
+                        <div className="flex items-start gap-3">
+                          <div
+                            className={`w-12 h-12 rounded-xl flex flex-col items-center justify-center font-bold shrink-0 shadow-xs ${
+                              isSelected
+                                ? 'bg-emerald-700 text-white'
+                                : 'bg-[#f0ede9] text-[#1c1c19]'
+                            }`}
+                          >
+                            <span className="text-[9px] uppercase leading-none opacity-80">Meja</span>
+                            <span className="text-lg tabular-nums leading-tight">{bill.tableNumber}</span>
+                          </div>
+
+                          <div className="flex flex-col min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-bold text-sm text-[#1c1c19] truncate">
+                                {bill.customerName}
+                              </span>
+                              <span className="px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 text-[10px] font-bold">
+                                LUNAS
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-1.5 text-[#524344] text-xs mt-0.5">
+                              <span>{bill.billNumber}</span>
+                              <span>•</span>
+                              <span>{bill.guestCount} Tamu</span>
+                              <span>•</span>
+                              <span className="font-semibold text-[#3d1018]">
+                                {bill.itemCount} item
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-1 text-[11px] text-[#847374] mt-1.5">
+                              <span className="material-symbols-outlined text-[14px] text-emerald-700">
+                                schedule
+                              </span>
+                              <span>
+                                {bill.paidAtTime || `Selesai ${bill.requestedAt}`}
+                              </span>
+                              <span>•</span>
+                              <span className="capitalize">{bill.paymentMethod || 'Tunai'}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col items-end shrink-0 gap-2">
+                          <span className="font-bold text-sm text-[#3d1018] tabular-nums">
+                            Rp {bill.total.toLocaleString('id-ID')}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openReceiptModal(bill);
+                            }}
+                            className="px-2.5 py-1.5 rounded-xl bg-[#3d1018] hover:bg-[#58252c] text-white text-[11px] font-bold flex items-center gap-1 shadow-xs transition cursor-pointer"
+                            title="Cetak Ulang Struk"
+                          >
+                            <span className="material-symbols-outlined text-[14px]">print</span>
+                            <span>Cetak Struk</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </>
           )}
 
           {/* Operational Policy Note */}
@@ -356,21 +526,30 @@ export const CheckoutView: React.FC = () => {
             {/* Bill Header */}
             <div className="flex items-start justify-between pb-3 bg-[#f6f3ee]/60 -m-5 p-5 rounded-t-2xl border-b border-[#ebe8e3]">
               <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-xl bg-[#3d1018] text-white flex items-center justify-center font-bold">
-                  <span className="material-symbols-outlined text-[22px]">restaurant</span>
+                <div className={`w-11 h-11 rounded-xl text-white flex items-center justify-center font-bold ${
+                  currentBill.status === 'lunas' ? 'bg-emerald-700' : 'bg-[#3d1018]'
+                }`}>
+                  <span className="material-symbols-outlined text-[22px]">
+                    {currentBill.status === 'lunas' ? 'verified' : 'restaurant'}
+                  </span>
                 </div>
                 <div className="flex flex-col">
                   <div className="flex items-center gap-2">
                     <span className="font-serif text-xl sm:text-2xl font-bold text-[#3d1018]">
                       Meja {currentBill.tableNumber} • {currentBill.customerName}
                     </span>
-                    <span className="px-2 py-0.5 rounded-full bg-[#ffdbc9] text-[#753400] text-[10px] font-bold">
-                      {currentBill.status === 'minta_checkout' ? 'Minta Checkout' : 'Belum Dibayar'}
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                      currentBill.status === 'lunas'
+                        ? 'bg-emerald-100 text-emerald-800'
+                        : currentBill.status === 'minta_checkout'
+                        ? 'bg-[#ffdbc9] text-[#753400]'
+                        : 'bg-[#f0ede9] text-[#524344]'
+                    }`}>
+                      {currentBill.status === 'lunas' ? 'Lunas' : currentBill.status === 'minta_checkout' ? 'Minta Checkout' : 'Belum Dibayar'}
                     </span>
                   </div>
                   <span className="text-xs text-[#524344] mt-0.5">
-                    ID: {currentBill.billNumber} • Pelayan: {currentBill.waiterName} • Buka Pesanan:{' '}
-                    {currentBill.openedAtTime}
+                    ID: {currentBill.billNumber} • Pelayan: {currentBill.waiterName} • {currentBill.status === 'lunas' ? `Waktu Bayar: ${currentBill.paidAtTime || currentBill.requestedAt}` : `Buka Pesanan: ${currentBill.openedAtTime}`}
                   </span>
                 </div>
               </div>
@@ -378,7 +557,7 @@ export const CheckoutView: React.FC = () => {
               <button
                 onClick={() => openReceiptModal(currentBill)}
                 title="Pratinjau Struk Kasir"
-                className="p-2 rounded-xl bg-[#f0ede9] hover:bg-[#ebe8e3] text-[#1c1c19] transition-colors"
+                className="p-2 rounded-xl bg-[#f0ede9] hover:bg-[#ebe8e3] text-[#1c1c19] transition-colors cursor-pointer"
               >
                 <span className="material-symbols-outlined text-[20px]">print</span>
               </button>
@@ -469,10 +648,63 @@ export const CheckoutView: React.FC = () => {
               </div>
             </div>
 
-            {/* Direct Settlement (Pembayaran Cepat) */}
-            <div className="flex flex-col gap-3 pt-1">
-              <div className="flex items-center justify-between">
-                <span className="font-bold text-sm text-[#3d1018]">Pilihan Metode Pembayaran</span>
+            {/* Direct Settlement (Pembayaran Cepat) OR Lunas History View */}
+            {currentBill.status === 'lunas' ? (
+              <div className="flex flex-col gap-3 pt-1">
+                <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center">
+                      <span className="material-symbols-outlined text-[24px]">verified</span>
+                    </div>
+                    <div>
+                      <p className="font-bold text-sm text-emerald-900">Tagihan Sudah Dibayar &amp; Lunas</p>
+                      <p className="text-xs text-emerald-700">
+                        {currentBill.paidAtTime || `Waktu: ${currentBill.requestedAt}`} • Metode:{' '}
+                        {(currentBill.paymentMethod || 'Tunai').toUpperCase()}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="px-3 py-1 rounded-full bg-emerald-600 text-white text-xs font-bold uppercase tracking-wider">
+                    LUNAS
+                  </span>
+                </div>
+
+                {currentBill.paymentMethod === 'tunai' && currentBill.cashTendered ? (
+                  <div className="grid grid-cols-2 gap-2 bg-[#f6f3ee] p-3 rounded-xl border border-[#ebe8e3] text-xs">
+                    <div>
+                      <span className="text-[#847374] block">Uang Tunai Diterima:</span>
+                      <span className="font-bold text-[#1c1c19] text-sm tabular-nums">
+                        Rp {currentBill.cashTendered.toLocaleString('id-ID')}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-[#847374] block">Kembalian Kasir:</span>
+                      <span className="font-bold text-[#994703] text-sm tabular-nums">
+                        Rp {(currentBill.changeAmount || 0).toLocaleString('id-ID')}
+                      </span>
+                    </div>
+                  </div>
+                ) : null}
+
+                <div className="flex flex-col sm:flex-row items-center gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => openReceiptModal(currentBill)}
+                    className="w-full flex-1 py-3.5 px-5 rounded-xl bg-[#3d1018] hover:bg-[#58252c] text-white text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-md active:scale-98 transition-all cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-[20px]">print</span>
+                    <span>Cetak Ulang Struk Kasir</span>
+                  </button>
+                </div>
+
+                <p className="text-center text-[11px] text-[#847374] mt-1">
+                  Struk transaksi ini tersimpan di sistem kasir. Dapat dicetak ulang kapan saja jika printer mati, macet, atau kasir di-reset.
+                </p>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3 pt-1">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-sm text-[#3d1018]">Pilihan Metode Pembayaran</span>
                 <span className="text-[11px] text-[#524344] flex items-center gap-1 font-semibold">
                   <span className="material-symbols-outlined text-[15px] text-[#994703]">
                     security
@@ -712,6 +944,7 @@ export const CheckoutView: React.FC = () => {
                 pembayaran tervalidasi.
               </p>
             </div>
+            )}
           </div>
         </div>
       </div>

@@ -2,7 +2,7 @@ import React from 'react';
 import { useApp } from '../context/AppContext';
 
 export const ThermalReceiptModal: React.FC = () => {
-  const { receiptModalData, closeReceiptModal } = useApp();
+  const { receiptModalData, closeReceiptModal, currentUser } = useApp();
 
   if (!receiptModalData) return null;
 
@@ -35,20 +35,25 @@ export const ThermalReceiptModal: React.FC = () => {
             </h3>
             <p className="text-[10px] text-[#736b63]">Surabaya, Jawa Timur</p>
             <p className="text-[9px] text-[#736b63]">Jl. Pemuda No. 45 • Telp: (031) 567-8901</p>
+            {bill.status === 'lunas' && (
+              <span className="mt-1.5 px-2.5 py-0.5 rounded border border-emerald-600 text-emerald-700 text-[10px] font-bold tracking-widest uppercase">
+                *** LUNAS ***
+              </span>
+            )}
           </div>
 
           {/* Meta Info */}
           <div className="flex flex-col gap-1 border-b border-dashed border-[#d8d1c7] pb-3 text-[11px]">
             <div className="flex justify-between">
-              <span>Bill: #{bill.billNumber}</span>
-              <span>Meja: {bill.tableNumber}</span>
+              <span className="font-bold">Bill: #{bill.billNumber}</span>
+              <span className="font-bold">Meja: {bill.tableNumber}</span>
             </div>
             <div className="flex justify-between text-[#736b63]">
               <span>Tamu: {bill.customerName} ({bill.guestCount} org)</span>
-              <span>Kasir: Arif Gusti</span>
+              <span>Kasir: {currentUser?.name || bill.waiterName || 'Kasir'}</span>
             </div>
             <div className="flex justify-between text-[#736b63]">
-              <span>Waktu: 10/10/2026 {bill.requestedAt}</span>
+              <span>Waktu: {bill.paidAtTime || `${new Date().toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' })} ${bill.requestedAt || ''}`}</span>
               <span>Layanan: Dine-in</span>
             </div>
           </div>
@@ -127,7 +132,7 @@ export const ThermalReceiptModal: React.FC = () => {
               ))}
             </div>
             <span className="text-[9px] font-mono tracking-widest text-[#847374]">
-              RG-POS-20261010-0031
+              RG-POS-{bill.billNumber.replace(/[^a-zA-Z0-9]/g, '') || '0031'}
             </span>
           </div>
         </div>

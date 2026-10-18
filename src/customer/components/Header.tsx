@@ -60,10 +60,6 @@ export const Header: React.FC<HeaderProps> = ({ onBack }) => {
         )}
 
         <div className="flex items-center gap-2">
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-secondary-fixed text-on-secondary-fixed text-[11px] font-semibold tracking-wide shadow-xs">
-            <span className="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse" />
-            Meja {selectedTable}
-          </span>
           <img
             alt="Profil Pelanggan"
             className="w-8 h-8 rounded-full object-cover border border-[#e5e2dd] shadow-xs"

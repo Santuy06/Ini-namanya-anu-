@@ -5,7 +5,7 @@ import { fetchPaid } from '../../lib/report';
 import { TransactionRecord } from '../types';
 
 export const LaporanView: React.FC = () => {
-  const { transactions, showToast, currentUser } = useApp();
+  const { transactions, showToast, currentUser, openReceiptModal } = useApp();
   const todayStr = today();
 
   const [startDate, setStartDate] = useState(todayStr);
@@ -474,6 +474,7 @@ export const LaporanView: React.FC = () => {
                 <th className="py-3 px-4 text-right">Subtotal</th>
                 <th className="py-3 px-4 text-right">Pajak 10%</th>
                 <th className="py-3 px-4 text-right">Total</th>
+                <th className="py-3 px-3 text-center">Struk</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#ebe8e3]">
@@ -507,6 +508,39 @@ export const LaporanView: React.FC = () => {
                   </td>
                   <td className="py-3 px-4 text-right font-bold text-[#1c1c19] tabular-nums">
                     Rp {trx.total.toLocaleString('id-ID')}
+                  </td>
+                  <td className="py-3 px-3 text-center">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const bill = trx.billData || {
+                          id: trx.id,
+                          billNumber: trx.code.replace('#', ''),
+                          tableNumber: trx.typeMeja.replace('Meja ', ''),
+                          customerName: 'Pelanggan',
+                          guestCount: 1,
+                          itemCount: 1,
+                          items: [{ name: 'Pesanan Meja Restoran', quantity: 1, price: trx.subtotal }],
+                          subtotal: trx.subtotal,
+                          serviceFee: Math.round(trx.subtotal * 0.05),
+                          tax: trx.tax,
+                          total: trx.total,
+                          requestedAt: trx.time,
+                          elapsedMinutesAgo: 0,
+                          waiterName: trx.source,
+                          openedAtTime: `${trx.time} WIB`,
+                          status: 'lunas',
+                          paymentMethod: trx.method.toLowerCase() as any,
+                          paidAtTime: `${trx.at ? new Date(trx.at).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' }) : ''} ${trx.time} WIB`,
+                        };
+                        openReceiptModal(bill);
+                      }}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#f0ede9] hover:bg-[#3d1018] text-[#3d1018] hover:text-white transition-colors text-[11px] font-bold shadow-2xs cursor-pointer"
+                      title="Cetak Ulang Struk Kasir"
+                    >
+                      <span className="material-symbols-outlined text-[14px]">print</span>
+                      <span>Struk</span>
+                    </button>
                   </td>
                 </tr>
               ))}

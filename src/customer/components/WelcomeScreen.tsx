@@ -8,7 +8,6 @@ export const WelcomeScreen: React.FC = () => {
     tableArea,
     guestsCount,
     setGuests,
-    openTableModal,
     navigate,
   } = useApp();
 
@@ -25,13 +24,13 @@ export const WelcomeScreen: React.FC = () => {
   return (
     <div className="flex flex-col w-full pb-10 min-h-screen bg-surface">
       {/* Top Heritage Hero Header */}
-      <div className="relative overflow-hidden bg-primary px-6 py-8 rounded-b-3xl shadow-md">
+      <div className="relative overflow-hidden bg-primary px-6 pt-7 pb-10 rounded-b-[28px] shadow-md">
         {/* Glow ambient effects */}
         <div className="absolute -right-12 -top-12 w-44 h-44 rounded-full bg-primary-container opacity-40 blur-2xl pointer-events-none" />
         <div className="absolute -left-10 -bottom-10 w-36 h-36 rounded-full bg-secondary opacity-20 blur-xl pointer-events-none" />
 
         {/* Brand bar */}
-        <div className="relative flex items-center justify-between mb-6">
+        <div className="relative flex items-center justify-between mb-5">
           <div className="flex items-center space-x-3">
             <img
               alt="Logo Rawon Gusti Surabaya"
@@ -47,18 +46,6 @@ export const WelcomeScreen: React.FC = () => {
               </span>
             </div>
           </div>
-          <button
-            onClick={openTableModal}
-            className="flex items-center space-x-1.5 bg-primary-container/90 px-3 py-1.5 rounded-full text-on-primary shadow-xs hover:bg-primary-container active:scale-95 transition-all cursor-pointer"
-          >
-            <span
-              className="material-symbols-outlined text-[17px] text-secondary-container"
-              style={{ fontVariationSettings: "'FILL' 1" }}
-            >
-              table_restaurant
-            </span>
-            <span className="font-sans text-[12px] font-semibold">Meja {selectedTable}</span>
-          </button>
         </div>
 
         {/* Greetings */}
@@ -81,17 +68,17 @@ export const WelcomeScreen: React.FC = () => {
         </div>
       </div>
 
-      {/* Table & Guest Card */}
-      <div className="px-5 -mt-5">
+      {/* Table & Guest Card (Floating cleanly over the hero header) */}
+      <div className="relative z-10 px-5 -mt-6">
         <div className="bg-surface-container-lowest rounded-2xl p-5 shadow-lg space-y-4 border border-[#eae3d9]/70">
           <div className="flex items-start justify-between">
             <div className="flex items-center space-x-3.5">
-              <div className="w-11 h-11 rounded-xl bg-primary-fixed/30 text-primary flex items-center justify-center">
+              <div className="w-11 h-11 rounded-xl bg-primary-container/15 text-primary flex items-center justify-center">
                 <span
-                  className="material-symbols-outlined text-2xl"
+                  className="material-symbols-outlined text-[24px]"
                   style={{ fontVariationSettings: "'FILL' 1" }}
                 >
-                  sensor_door
+                  table_restaurant
                 </span>
               </div>
               <div>
@@ -102,12 +89,6 @@ export const WelcomeScreen: React.FC = () => {
                 <p className="font-sans text-[12px] text-on-surface-variant">{tableArea}</p>
               </div>
             </div>
-            <button
-              onClick={openTableModal}
-              className="px-3 py-1.5 text-secondary bg-surface-container-low rounded-lg font-sans font-semibold text-[12px] hover:bg-surface-container active:scale-95 transition-all cursor-pointer"
-            >
-              Ganti Meja
-            </button>
           </div>
 
           {/* Guest Count Stepper */}

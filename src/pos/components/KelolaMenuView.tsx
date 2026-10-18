@@ -461,13 +461,11 @@ const KelolaMenuViewInner: React.FC = () => {
                             </td>
                             <td className="py-3.5 px-3">
                               {item.isAvailable ? (
-                                <span className="inline-flex items-center gap-1 text-[11px] text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full font-semibold">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                                <span className="text-xs font-medium text-emerald-700">
                                   Tersedia
                                 </span>
                               ) : (
-                                <span className="inline-flex items-center gap-1 text-[11px] text-red-700 bg-red-50 border border-red-200 px-2.5 py-0.5 rounded-full font-semibold">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-red-600"></span>
+                                <span className="text-xs font-medium text-red-600">
                                   Habis
                                 </span>
                               )}
@@ -735,7 +733,7 @@ const KelolaMenuViewInner: React.FC = () => {
                 <div className="text-2xl sm:text-3xl font-serif font-bold text-[#1c1c19] mt-1 tabular-nums">
                   {rawIngredients.length}
                 </div>
-                <span className="text-[11px] text-[#524344]">Semua item terpantau sensor</span>
+                <span className="text-[11px] text-[#524344]">Inventaris bahan terpantau</span>
               </div>
               <div className="w-11 h-11 rounded-xl bg-[#f0ede9] text-[#3d1018] flex items-center justify-center">
                 <span className="material-symbols-outlined text-[24px]">inventory_2</span>
@@ -925,7 +923,7 @@ const KelolaMenuViewInner: React.FC = () => {
                     <th className="py-3 px-3 font-semibold text-center">Stok Saat Ini</th>
                     <th className="py-3 px-3 font-semibold text-center">Batas Minimum</th>
                     <th className="py-3 px-4 font-semibold">Kapasitas / Safety Buffer</th>
-                    <th className="py-3 px-3 font-semibold text-center">Status Sensor</th>
+                    <th className="py-3 px-3 font-semibold text-center">Status</th>
                     <th className="py-3 px-3 font-semibold">Menu Terkait</th>
                     <th className="py-3 px-4 text-right font-semibold">Tindakan</th>
                   </tr>
@@ -1061,22 +1059,19 @@ const KelolaMenuViewInner: React.FC = () => {
                             </div>
                           </td>
 
-                          {/* Status Sensor Otomatis */}
-                          <td className="py-3.5 px-3 text-center">
+                          {/* Status Stok */}
+                          <td className="py-3.5 px-3 text-center whitespace-nowrap">
                             {isZero ? (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-red-100 text-red-700 text-[10px] font-bold border border-red-300 animate-pulse">
-                                <span className="w-1.5 h-1.5 rounded-full bg-red-600"></span>
-                                HABIS TOTAL
+                              <span className="text-xs font-medium text-red-600">
+                                Habis
                               </span>
                             ) : isLow ? (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-100 text-amber-900 text-[10px] font-bold border border-amber-300">
-                                <span className="w-1.5 h-1.5 rounded-full bg-amber-600"></span>
-                                MENIPIS (PERLU RESTOK)
+                              <span className="text-xs font-medium text-amber-700">
+                                Menipis
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-semibold">
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
-                                AMAN
+                              <span className="text-xs font-medium text-emerald-700">
+                                Aman
                               </span>
                             )}
                           </td>
@@ -1276,7 +1271,7 @@ const KelolaMenuViewInner: React.FC = () => {
           >
             <div className="flex items-center justify-between border-b border-[#ebe8e3] pb-3">
               <span className="font-serif text-xl font-bold text-[#3d1018]">
-                Atur Batas Minimum Sensor
+                Atur Batas Minimum Stok
               </span>
               <button
                 type="button"

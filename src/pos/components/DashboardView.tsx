@@ -127,7 +127,7 @@ export const DashboardView: React.FC = () => {
         <div className="space-y-1">
           <div className="flex items-center gap-1.5 text-[#524344] text-xs font-semibold uppercase tracking-wider">
             <span>Rawon Gusti Surabaya</span>
-            <span className="text-[#d7c2c2]">/</span>
+            <span className="text-[#524344]">/</span>
             <span>Layanan Operasional</span>
           </div>
           <h1 className="font-serif text-3xl sm:text-4xl font-bold text-[#3d1018] tracking-tight">
@@ -201,7 +201,7 @@ export const DashboardView: React.FC = () => {
         {/* Metric 1 */}
         <div className="bg-white rounded-2xl p-5 shadow-sm border border-[#ebe8e3] flex flex-col justify-between hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between text-[#524344] mb-2">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-[#847374]">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[#524344]">
               Penjualan Lunas
             </span>
             <span className="w-8 h-8 rounded-full bg-[#f0ede9] flex items-center justify-center text-[#3d1018]">
@@ -219,7 +219,7 @@ export const DashboardView: React.FC = () => {
         {/* Metric 2 */}
         <div className="bg-white rounded-2xl p-5 shadow-sm border border-[#ebe8e3] flex flex-col justify-between hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between text-[#524344] mb-2">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-[#847374]">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[#524344]">
               Transaksi Lunas
             </span>
             <span className="w-8 h-8 rounded-full bg-[#f0ede9] flex items-center justify-center text-[#3d1018]">
@@ -237,7 +237,7 @@ export const DashboardView: React.FC = () => {
         {/* Metric 3 */}
         <div className="bg-white rounded-2xl p-5 shadow-sm border border-[#ebe8e3] flex flex-col justify-between hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between text-[#524344] mb-2">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-[#847374]">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[#524344]">
               Rata-rata Transaksi
             </span>
             <span className="w-8 h-8 rounded-full bg-[#f0ede9] flex items-center justify-center text-[#3d1018]">
@@ -255,7 +255,7 @@ export const DashboardView: React.FC = () => {
         {/* Metric 4 */}
         <div className="bg-white rounded-2xl p-5 shadow-sm border border-[#ebe8e3] flex flex-col justify-between hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between text-[#524344] mb-2">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-[#847374]">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[#524344]">
               Pajak Terkumpul
             </span>
             <span className="w-8 h-8 rounded-full bg-[#f0ede9] flex items-center justify-center text-[#3d1018]">
@@ -298,7 +298,7 @@ export const DashboardView: React.FC = () => {
               <div className="h-48 w-full flex items-end justify-between gap-2 sm:gap-4 px-2 sm:px-6">
                 {/* 10-11 */}
                 <div className="flex-1 flex flex-col items-center gap-2 group">
-                  <span className="text-[10px] text-[#847374] group-hover:text-[#1c1c19] transition-colors">
+                  <span className="text-[10px] text-[#524344] group-hover:text-[#1c1c19] transition-colors">
                     Rp0
                   </span>
                   <div className="w-full max-w-[48px] h-1 bg-[#f0ede9] rounded-t"></div>
@@ -306,7 +306,7 @@ export const DashboardView: React.FC = () => {
                 </div>
                 {/* 11-12 */}
                 <div className="flex-1 flex flex-col items-center gap-2 group">
-                  <span className="text-[10px] text-[#847374] group-hover:text-[#1c1c19] transition-colors">
+                  <span className="text-[10px] text-[#524344] group-hover:text-[#1c1c19] transition-colors">
                     Rp0
                   </span>
                   <div className="w-full max-w-[48px] h-1 bg-[#f0ede9] rounded-t"></div>
@@ -330,7 +330,7 @@ export const DashboardView: React.FC = () => {
                 </div>
                 {/* 13-14 */}
                 <div className="flex-1 flex flex-col items-center gap-2 group">
-                  <span className="text-[10px] text-[#847374] group-hover:text-[#1c1c19] transition-colors">
+                  <span className="text-[10px] text-[#524344] group-hover:text-[#1c1c19] transition-colors">
                     Rp0
                   </span>
                   <div className="w-full max-w-[48px] h-1 bg-[#f0ede9] rounded-t"></div>
@@ -338,7 +338,7 @@ export const DashboardView: React.FC = () => {
                 </div>
                 {/* 14-15 */}
                 <div className="flex-1 flex flex-col items-center gap-2 group">
-                  <span className="text-[10px] text-[#847374] group-hover:text-[#1c1c19] transition-colors">
+                  <span className="text-[10px] text-[#524344] group-hover:text-[#1c1c19] transition-colors">
                     Rp0
                   </span>
                   <div className="w-full max-w-[48px] h-1 bg-[#f0ede9] rounded-t"></div>
@@ -360,7 +360,7 @@ export const DashboardView: React.FC = () => {
               Metode pembayaran
             </h2>
             <div className="mt-3">
-              <span className="text-[11px] font-bold text-[#847374] uppercase tracking-wider block">
+              <span className="text-[11px] font-bold text-[#524344] uppercase tracking-wider block">
                 Total Penerimaan
               </span>
               <div className="font-serif text-2xl font-bold text-[#3d1018] tracking-tight mt-0.5 tabular-nums">
@@ -442,6 +442,10 @@ export const DashboardView: React.FC = () => {
                     className="w-12 h-12 rounded-xl object-cover shadow-xs"
                     src="https://lh3.googleusercontent.com/aida-public/AB6AXuCFHSGMKXQx63I6WBr9cugQ8S2GdGhN6R-eMVPx6SlumIcNoHCJd0bnu_1YQnGjqrukL2SRb9WVZQ0Ksld_wCxuqM2lQ5j0eEoaGGcRwj_GWsz7xUi2hFnIWedNIQiO91PyFU8VF8Anm_Y2lh6wvGp3DWIb_XNxuRi31yIzmkt73v85U75smBDD12-TzWIosmL4yKHH41MTSgcJN1x3EwDMC3h_MSeRMXyHvgoV_FXis9HRXo3D_bXcPQ"
                     alt="Rawon Daging"
+                    width={48}
+                    height={48}
+                    loading="lazy"
+                    decoding="async"
                   />
                   <div>
                     <h3 className="font-bold text-sm text-[#1c1c19]">Rawon Daging</h3>
@@ -458,6 +462,10 @@ export const DashboardView: React.FC = () => {
                     className="w-12 h-12 rounded-xl object-cover shadow-xs"
                     src="https://lh3.googleusercontent.com/aida-public/AB6AXuCutdZvEnhdcvQ8PaXqmbYd_s_eDADnaXr7jH1dPMzrgIcAHelx4cFb-nxA6cGLY6n4EWNZQXZJugpa6SOSg8-7sDqhB_Ku8YjaFYAEwAtTCHKVzppaXTsfOKALkDmmTQJnNShsGv2r3fvYLeDcmOeQ3rhfyYRf7cTWtpQbiwW3p_-x4RncOKitZiGcYo8YYJC0L2-xbtAxfkIGXzuV70HGh2tuUqswYutqbVcNdOsyyaphZSigUFTOow"
                     alt="Nasi Putih"
+                    width={48}
+                    height={48}
+                    loading="lazy"
+                    decoding="async"
                   />
                   <div>
                     <h3 className="font-bold text-sm text-[#1c1c19]">Nasi Putih</h3>
@@ -474,6 +482,10 @@ export const DashboardView: React.FC = () => {
                     className="w-12 h-12 rounded-xl object-cover shadow-xs"
                     src="https://lh3.googleusercontent.com/aida-public/AB6AXuCQo4qWiJ4sHgMDfwQT_6x16KuBJU4HC3DlzT8y55nwVgHeFLBz44Dd6prXwQf4nfgdUqTK3_HZBnBvLtbg5L6RGSrVbAOMeM0Vaws9p04DE3mkL_CFWVEdrvk8kHBmrCPGvUsuH9_3x55Y29PJQt58g9Qm-fWdRAOYdT2uWq2qfLUlueA-I7_ItWeE8ohmmVXS4qbEFnEQF9xgaJOuG_O0CyFi6glns0o0QhViaFX-lrBzP6q6s6Bl4A"
                     alt="Rawon Campur"
+                    width={48}
+                    height={48}
+                    loading="lazy"
+                    decoding="async"
                   />
                   <div>
                     <h3 className="font-bold text-sm text-[#1c1c19]">Rawon Campur</h3>
@@ -519,45 +531,53 @@ export const DashboardView: React.FC = () => {
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead>
-                  <tr className="text-[#847374] uppercase tracking-wider bg-[#f6f3ee] text-[10px] font-bold">
-                    <th className="py-2.5 px-3 rounded-l-xl">Pesanan</th>
-                    <th className="py-2.5 px-3">Tipe / Meja</th>
-                    <th className="py-2.5 px-3">Metode</th>
-                    <th className="py-2.5 px-3">Total</th>
-                    <th className="py-2.5 px-3 rounded-r-xl text-right">Status</th>
+                  <tr className="text-[#524344] uppercase tracking-wider bg-[#f6f3ee] text-[10px] font-bold">
+                    <th scope="col" className="py-2.5 px-3 rounded-l-xl">Pesanan</th>
+                    <th scope="col" className="py-2.5 px-3">Tipe / Meja</th>
+                    <th scope="col" className="py-2.5 px-3">Metode</th>
+                    <th scope="col" className="py-2.5 px-3">Total</th>
+                    <th scope="col" className="py-2.5 px-3 rounded-r-xl text-right">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#ebe8e3]">
-                  {filteredTrx.slice(0, 6).map((trx, idx) => (
-                    <tr
-                      key={trx.id}
-                      className={`hover:bg-[#f6f3ee] transition-colors ${
-                        idx === 0 ? 'bg-[#ffdadc]/30 font-medium' : ''
-                      }`}
-                    >
-                      <td className="py-3 px-3 font-bold text-[#3d1018]">{trx.code}</td>
-                      <td className="py-3 px-3 text-[#1c1c19]">{trx.typeMeja}</td>
-                      <td className="py-3 px-3">
-                        <span
-                          className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
-                            trx.method === 'Tunai'
-                              ? 'bg-amber-50 text-amber-800 border border-amber-200'
-                              : 'bg-rose-50 text-[#3d1018] border border-rose-200'
-                          }`}
-                        >
-                          {trx.method}
-                        </span>
-                      </td>
-                      <td className="py-3 px-3 font-bold text-[#1c1c19] tabular-nums">
-                        Rp {trx.total.toLocaleString('id-ID')}
-                      </td>
-                      <td className="py-3 px-3 text-right">
-                        <span className="px-2 py-0.5 rounded-full bg-[#f0ede9] text-[#524344] text-[10px] font-semibold">
-                          {trx.status}
-                        </span>
+                  {filteredTrx.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="py-6 text-center text-xs text-[#524344]">
+                        Belum ada transaksi pada periode ini
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    filteredTrx.slice(0, 6).map((trx, idx) => (
+                      <tr
+                        key={trx.id}
+                        className={`hover:bg-[#f6f3ee] transition-colors ${
+                          idx === 0 ? 'bg-[#ffdadc]/30 font-medium' : ''
+                        }`}
+                      >
+                        <td className="py-3 px-3 font-bold text-[#3d1018]">{trx.code}</td>
+                        <td className="py-3 px-3 text-[#1c1c19]">{trx.typeMeja}</td>
+                        <td className="py-3 px-3">
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                              trx.method === 'Tunai'
+                                ? 'bg-amber-50 text-amber-900 border border-amber-300'
+                                : 'bg-rose-50 text-[#3d1018] border border-rose-200'
+                            }`}
+                          >
+                            {trx.method}
+                          </span>
+                        </td>
+                        <td className="py-3 px-3 font-bold text-[#1c1c19] tabular-nums">
+                          Rp {trx.total.toLocaleString('id-ID')}
+                        </td>
+                        <td className="py-3 px-3 text-right">
+                          <span className="px-2 py-0.5 rounded-full bg-[#f0ede9] text-[#524344] text-[10px] font-semibold">
+                            {trx.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -568,7 +588,7 @@ export const DashboardView: React.FC = () => {
               {filteredTrx.length} transaksi • subtotal Rp {totalSubtotal.toLocaleString('id-ID')} +
               pajak Rp {totalPajak.toLocaleString('id-ID')}
             </span>
-            <span className="flex items-center gap-1 text-[#847374]">
+            <span className="flex items-center gap-1 text-[#524344]">
               <span className="material-symbols-outlined text-[14px]">sync</span>
               Data live
             </span>

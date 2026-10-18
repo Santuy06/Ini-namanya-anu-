@@ -1,0 +1,3 @@
+# robots.txt for Rawon Gusti POS & Self-Ordering
+User-agent: *
+Allow: /

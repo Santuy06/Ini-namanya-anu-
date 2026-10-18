@@ -29,7 +29,7 @@ export const HelpModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full flex items-center justify-center text-[#847374] hover:text-[#3d1018] hover:bg-[#f0ede9] transition-colors"
+            className="w-8 h-8 rounded-full flex items-center justify-center text-[#524344] hover:text-[#3d1018] hover:bg-[#f0ede9] transition-colors"
           >
             <span className="material-symbols-outlined text-[20px]">close</span>
           </button>
@@ -190,7 +190,7 @@ export const MobileHeader: React.FC = () => {
               </div>
               <button
                 onClick={() => setAdminMenuOpen(false)}
-                className="w-8 h-8 rounded-full flex items-center justify-center text-[#847374] hover:bg-[#f0ede9]"
+                className="w-8 h-8 rounded-full flex items-center justify-center text-[#524344] hover:bg-[#f0ede9]"
               >
                 <span className="material-symbols-outlined text-[20px]">close</span>
               </button>
@@ -221,7 +221,7 @@ export const MobileHeader: React.FC = () => {
                   </span>
                   <div>
                     <span className="font-bold text-xs block leading-tight">{item.label}</span>
-                    <span className={`text-[10px] mt-0.5 block ${activeView === item.view ? 'text-[#ffdadc]/70' : 'text-[#847374]'}`}>
+                    <span className={`text-[10px] mt-0.5 block ${activeView === item.view ? 'text-[#ffdadc]/70' : 'text-[#524344]'}`}>
                       {item.desc}
                     </span>
                   </div>
@@ -285,7 +285,7 @@ export const MobileBottomNav: React.FC = () => {
                   }
                 }}
                 className={`flex flex-col items-center justify-center gap-0.5 w-16 h-14 transition-colors ${
-                  isActive ? 'text-[#3d1018] font-bold' : 'text-[#847374] hover:text-[#3d1018]'
+                  isActive ? 'text-[#3d1018] font-bold' : 'text-[#524344] hover:text-[#3d1018]'
                 }`}
               >
                 <span
@@ -315,7 +315,7 @@ export const MobileBottomNav: React.FC = () => {
               <h3 className="font-serif text-base font-bold text-[#1c1c19]">Menu Manajemen Outlet</h3>
               <button
                 onClick={() => setMobileAdminOpen(false)}
-                className="w-7 h-7 rounded-full flex items-center justify-center text-[#847374]"
+                className="w-7 h-7 rounded-full flex items-center justify-center text-[#524344]"
               >
                 <span className="material-symbols-outlined text-[18px]">close</span>
               </button>
@@ -397,6 +397,10 @@ export const DesktopSidebar: React.FC = () => {
             alt="Rawon Gusti Brand"
             className="w-10 h-10 rounded-full object-cover ring-2 ring-[#ffb2b9]/40"
             src="https://lh3.googleusercontent.com/aida-public/AB6AXuC4jDTg2zGsW66D3mPi0LCCgkEKAz6A3C_LyMjRjF33cCX-hxn-FMKJ-VmnANEDzHK36CnYdj065-0rxRIyAzaBK6gX8QPIzL_SZbagw1SD7hPd2ZxzJIZ6yhPlB0wT0wYg5V1QYZIndg6LMBj-RspFW4GjCZKuvGWpMCQZZXFIpvETPHdcZZBqLKJziB4JXaXmcwodTl3uHGVnuzTEmOl9Fam2CBCupu5HozhgUINKbYrxNyF4ccQ9FOYEpUIXWooGFlE"
+            width={40}
+            height={40}
+            loading="eager"
+            decoding="async"
           />
           <div className="flex flex-col overflow-hidden">
             <span className="font-serif font-bold text-base text-[#ffdadc] leading-tight tracking-wide truncate">
@@ -533,41 +537,14 @@ export const DesktopHeader: React.FC = () => {
                 store
               </span>
               <span className="font-semibold text-[#1c1c19]">Rawon Gusti Surabaya</span>
-              <span className="text-[#847374]">/</span>
+              <span className="text-[#524344]">/</span>
               <span className="font-medium">{getViewTitle()}</span>
-            </div>
-            <span className="h-4 w-px bg-[#d7c2c2]"></span>
-            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#ebe8e3] text-xs font-medium text-[#1c1c19]">
-              <span className="material-symbols-outlined text-[15px] text-[#994703]">
-                schedule
-              </span>
-              <span>
-                {new Date().toLocaleDateString('id-ID', {
-                  weekday: 'long',
-                  day: 'numeric',
-                  month: 'short',
-                  year: 'numeric',
-                  timeZone: 'Asia/Jakarta',
-                })}
-              </span>
             </div>
           </div>
 
-          {/* Right: Status & Quick Controls */}
+          {/* Right: Quick Controls */}
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5 px-3 py-1 bg-[#f0ede9] rounded-full">
-              <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-              <span className="text-xs font-semibold text-[#1c1c19]">POS Aktif &amp; Sinkron</span>
-            </div>
-
             <div className="flex items-center gap-1">
-              <button
-                onClick={() => setActiveView('laporan')}
-                title="Laporan Transaksi"
-                className="p-2 rounded-lg text-[#524344] hover:bg-[#ebe8e3] hover:text-[#1c1c19] transition-colors"
-              >
-                <span className="material-symbols-outlined text-[20px]">query_stats</span>
-              </button>
               <button
                 onClick={() => setHelpOpen(true)}
                 title="Bantuan & Petunjuk Operasional"
@@ -582,6 +559,10 @@ export const DesktopHeader: React.FC = () => {
                 alt="Profile"
                 className="w-8 h-8 rounded-full object-cover ring-1 ring-[#d7c2c2]"
                 src="https://lh3.googleusercontent.com/aida-public/AB6AXuC4jDTg2zGsW66D3mPi0LCCgkEKAz6A3C_LyMjRjF33cCX-hxn-FMKJ-VmnANEDzHK36CnYdj065-0rxRIyAzaBK6gX8QPIzL_SZbagw1SD7hPd2ZxzJIZ6yhPlB0wT0wYg5V1QYZIndg6LMBj-RspFW4GjCZKuvGWpMCQZZXFIpvETPHdcZZBqLKJziB4JXaXmcwodTl3uHGVnuzTEmOl9Fam2CBCupu5HozhgUINKbYrxNyF4ccQ9FOYEpUIXWooGFlE"
+                width={32}
+                height={32}
+                loading="lazy"
+                decoding="async"
               />
             </div>
           </div>

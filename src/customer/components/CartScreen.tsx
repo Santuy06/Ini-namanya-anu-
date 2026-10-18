@@ -69,10 +69,6 @@ export const CartScreen: React.FC = () => {
               </p>
             </div>
           </div>
-          <span className="shrink-0 px-2.5 py-1 rounded-full bg-secondary-fixed text-on-secondary-fixed font-sans text-[11px] font-bold flex items-center gap-1 shadow-xs">
-            <span className="w-1.5 h-1.5 rounded-full bg-secondary animate-ping" />
-            Aktif
-          </span>
         </div>
       </div>
 
