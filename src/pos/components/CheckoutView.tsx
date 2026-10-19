@@ -579,7 +579,7 @@ export const CheckoutView: React.FC = () => {
                 <span>
                   {currentBill.status === 'lunas' || currentBill.isAllServed !== false
                     ? `${currentBill.itemCount || 0} Item Disajikan`
-                    : `${currentBill.itemCount || 0} Item Dimasak Dapur`}
+                    : `${currentBill.itemCount || 0} Item Sedang Dimasak`}
                 </span>
               </div>
               <div className="flex items-center gap-2 text-xs font-semibold text-[#1c1c19]">
@@ -591,7 +591,7 @@ export const CheckoutView: React.FC = () => {
                 <span>
                   {currentBill.status === 'lunas' || currentBill.isAllServed !== false
                     ? '0 Pesanan Tertunda'
-                    : `${currentBill.unservedCount || 1} Belum Disajikan`}
+                    : `${currentBill.unservedCount || 1} Belum Disajikan Dapur`}
                 </span>
               </div>
               <div className="flex items-center gap-2 text-xs font-semibold text-[#1c1c19]">
@@ -727,10 +727,10 @@ export const CheckoutView: React.FC = () => {
                     </span>
                     <div>
                       <span className="font-bold block text-amber-950">
-                        Pesanan Belum Selesai Disajikan ({currentBill.unservedCount || 1} pesanan di dapur)
+                        Pesanan Sedang Diproses Dapur ({currentBill.unservedCount || 1} tiket aktif)
                       </span>
                       <span className="text-[11px] text-amber-800 leading-relaxed block mt-0.5">
-                        Demi mencegah selisih kas dan pembayaran berulang, kasir hanya dapat menerima pembayaran setelah dapur memajukan status pesanan menjadi <strong>Disajikan</strong> di layar Pantau Pesanan (KDS).
+                        Sesuai alur Dine-In, pembayaran kasir diselesaikan setelah seluruh hidangan selesai dimasak dan disajikan ke meja tamu melalui menu <strong>Pantau Pesanan (KDS)</strong>.
                       </span>
                     </div>
                   </div>
@@ -955,7 +955,7 @@ export const CheckoutView: React.FC = () => {
                   className={`w-full flex-1 px-5 py-3 rounded-xl text-white text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-md active:scale-98 transition-all ${
                     currentBill.isAllServed === false
                       ? 'bg-[#847374] opacity-75 cursor-not-allowed'
-                      : 'bg-[#3d1018] hover:bg-[#58252c]'
+                      : 'bg-[#3d1018] hover:bg-[#58252c] cursor-pointer'
                   }`}
                   title={currentBill.isAllServed === false ? 'Harap selesaikan pesanan di dapur terlebih dahulu' : 'Konfirmasi pembayaran kasir'}
                 >
